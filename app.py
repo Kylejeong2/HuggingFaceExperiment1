@@ -3,6 +3,7 @@ from transformers import pipeline
 from langchain import PromptTemplate, LLMChain, OpenAI
 import requests
 import os
+import streamlit as st
 
 
 load_dotenv(find_dotenv())
@@ -41,9 +42,6 @@ def generate_story(scenario):
     print(story)
     return story
 
-scenario = img2text("license.jpg")
-story = generate_story(scenario)
-
 #text to speech
 
 def text2speech(message):
@@ -56,3 +54,31 @@ def text2speech(message):
     response = requests.post(API_URL, headers=headers, json=payloads) 
     with open('audio.flac', 'wb') as file:
         file.write(response.content)
+
+def main():
+
+    st.set_page_config(page_title="img 2 audio story", page_icon="🤖")
+
+    st.header("Turn img into audio story")
+    uploaded_file = st.file_uploader("Choose an image ...", type="jpg")
+
+    if uploaded_file is not None:
+        print(uploaded_file)
+        bytes_data = uploaded_file.getvalue()
+        with open(uploaded_file.name, "wb") as file:
+            file.write(bytes_data)
+
+        st.image(uploaded_file, caption="Uploaded Image.",
+                 use_column_width=True)
+        
+        scenario = img2text(uploaded_file.name)
+        story = generate_story(scenario)
+        text2speech(story)
+
+        with st.expander("scenario"):
+            st.write(scenario)
+        
+        with st.expander("story"):
+            st.write(story)
+
+        st.audio("audio.flac")
